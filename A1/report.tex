@@ -1,0 +1,660 @@
+\documentclass[11pt, fleqn]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{hyperref}
+\usepackage{ulem}
+\usepackage{enumitem}
+\usepackage[left=0.75in, right=0.75in, bottom=0.75in, top=1.0in]{geometry}
+\usepackage{floatrow}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage[export]{adjustbox}
+\usepackage{sectsty}
+\sectionfont{\centering}
+\usepackage{hyperref}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[perpage]{footmisc}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{190050020 \& 190100044 \& 190100055 \& 190260036}
+\rhead{CS 218: Assignment 1}
+\renewcommand{\footrulewidth}{1.0pt}
+\cfoot{Page \thepage}
+
+\SetKwInput{KwInput}{Input}                % Set the Input
+\SetKwInput{KwOutput}{Output}              % set the Output
+\newcommand{\boxedeq}[2]{\begin{empheq}[box={\fboxsep=6pt\fbox}]{align}\label{#1}#2\end{empheq}}
+\setlength{\parindent}{0em}
+\renewcommand{\arraystretch}{2}
+
+\title{CS 218: Assignment 1}
+\author{
+\begin{tabular}{|c|c|c|c|}
+     \hline
+     Ankit Kumar Misra & Devansh Jain & Harshit Varma & Richeek Das \\
+     \hline
+     190050020 & 190100044 & 190100055 & 190260036\\
+     \hline
+\end{tabular}
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\thispagestyle{empty}
+\setcounter{page}{0}
+\renewcommand{\arraystretch}{1}
+
+
+\newpage 
+\section*{Question 1}
+\label{q1}
+\addcontentsline{toc}{section}{Question 1}
+\setcounter{equation}{0}
+
+\textbf{Objective:} To analyze 9 given strategies (other than the standard earliest-finish-first algorithm) aimed at solving the interval-scheduling problem, and to determine which of them give correct optimal solutions. We first give counter-examples for those that are incorrect, and then we prove those that are correct.
+
+\hrulefill
+\smallskip
+
+Of the algorithms (a)-(i), only (c), (h), and (i) are correct. The rest can be disproved using simple counterexamples, as shown below. The blue-filled boxes represent an optimal solution, and the red-outlined boxes represent a solution produced by the faulty algorithm.
+\begin{itemize}
+    \item[(a)]
+    \textbf{Strategy}: Choose the course x that ends last, discard classes that conflict with x, and recurse.\\
+    \textbf{Counterexample}:
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\textwidth]{1a.png}
+    \end{figure}
+    \item[(b)]
+    \textbf{Strategy}: Choose the course x that starts first, discard all classes that conflict with x, and recurse.\\
+    \textbf{Counterexample}:
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\textwidth]{1a.png}
+    \end{figure}
+    \item[(d)]
+    \textbf{Strategy}: Choose the course x with shortest duration, discard all classes that conflict with x, and recurse.\\
+    \textbf{Counterexample}:
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\textwidth]{1d.png}
+    \end{figure}
+    \item[(e)]
+    \textbf{Strategy}: Choose a course x that conflicts with the fewest other courses, discard all classes that conflict with x, and recurse.\\
+    \textbf{Counterexample}:
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\textwidth]{1e.png}
+    \end{figure}
+    \item[(f)]
+    \textbf{Strategy}: If no classes conflict, choose them all.  Otherwise, discard the course with longest duration and recurse.\\
+    \textbf{Counterexample}:
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\textwidth]{1f.png}
+    \end{figure}
+    \item[(g)]
+    \textbf{Strategy}: If no classes conflict, choose them all. Otherwise, discard a course that conflicts with the most other courses and recurse.\\
+    \textbf{Counterexample}:
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\textwidth]{1g.png}
+    \end{figure}
+\end{itemize}
+In all the cases shown above, there is an optimal solution consisting of exactly one more interval than the number of intervals comprising the solution obtained from the corresponding algorithm/strategy. This proves that they are all faulty.
+
+\bigskip
+
+Now we prove the correctness of the three remaining strategies, i.e., (c), (h), and (i).
+
+\begin{itemize}
+    \item[(c)]
+    \textbf{Strategy}: Choose the course x that starts last, discard all classes that conflict with x, and recurse.\\
+    \textbf{Proof}: Let ALG be the list of intervals obtained by the above strategy, and OPT be the list of intervals forming an optimal solution. Let each list be indexed in the reverse order, i.e., the last interval is numbered 1, the second-last is numbered 2, and so on. So, we have:
+    \begin{align}
+        \text{ALG} &= [i_m, i_{m-1}, \dots, i_2, i_1]\\
+        \text{OPT} &= [j_n, j_{n-1}, \dots, j_2, j_1]
+    \end{align}
+    Since OPT is optimal, we know that $\lvert \text{OPT}\rvert \geq \lvert \text{ALG}\rvert$. To prove that ALG also gives an optimal solution, we must show that $\lvert \text{OPT}\rvert = \lvert \text{ALG}\rvert$.
+    
+    \medskip
+    
+    \textbf{Claim}: For all $k$ such that $1\leq k\leq m$, we have $s(i_k) \geq s(j_k)$.\\
+    This can be proved using induction on $k$.\\
+    Base case: $k=1$. We have $s(i_1)\geq s(j_1)$, by the strategy's choice of $i_1$.\\
+    Inductive step: Suppose $s(i_k) \geq s(j_k)$ for some $k\geq 1$. Since intervals within OPT cannot overlap, we also have $f(j_{k+1}) < s(j_k)$. Thus, $f(j_{k+1}) < s(i_k)$, i.e., when ALG picks its $(k+1)$-th job (in reverse order), then $j_{k+1}$ is available for it to choose. Our greedy algorithm is going to pick $i_{k+1}$ as either $j_{k+1}$ or something better. Thus, $s(i_{k+1}) \geq s(j_{k+1})$.
+    
+    \medskip
+    
+    Clearly, the choices made by ALG at any step are going to be at least as good as those made by OPT. An interval selected by OPT can also be picked by ALG at any given time. Thus, ALG provides an optimal solution.
+    
+    \medskip
+    
+    Note that this strategy is similar to the ``earliest-finish-first" strategy, applied in the reverse direction.
+    
+    \item[(h)]
+    \textbf{Strategy}: Let x be the class with the earliest start time, and let y be the class with the second earliest start time.
+    \begin{itemize}
+        \item If x and y are disjoint, choose x and recurse on everything but x.
+        \item If x completely contains y, discard x and recurse.
+        \item Otherwise, discard y and recurse.
+    \end{itemize}
+    \textbf{Proof}: We prove that this strategy produces exactly the same results as the standard ``earliest-finish-first" strategy discussed in class, which we know to be correct. Let x and y (as defined above) be the intervals $(s_1, f_1)$ and $(s_2, f_2)$. By definition, $s_1 \leq s_2$, and for any of the other intervals $(s, f)$, we have $s_2 \leq s$. Consider each of the above cases:
+    \begin{itemize}
+        \item Case 1: x and y are disjoint. This means $s_1 < f_1 \leq s_2 < f_2$. Now $s_2 < f_2$, and $s_2 \leq s < f$ for any other intervals $(s, f)$. Thus, $f_1 < f_2$, and $f_1 < f$ for other intervals $(s, f)$, i.e., x is the interval having the earliest finish time. Choosing x and then recursing is consistent with the ``earliest-finish-first" strategy.
+        \item Case 2: x completely contains y. This means $s_1 \leq s_2 < f_2 \leq f_1$. In this case, the interval with the earliest finish time is either y itself, or some other interval $(s, f)$ such that $s_2 \leq s$ (because y is defined this way) and $f \leq f_2$ (for it to have an earlier finish time than y). Either way, the interval having the earliest finish time is going to be contained within x, and therefore is going to conflict with x. Thus, discarding x is consistent with the ``earliest-finish-first" strategy.
+        \item Case 3: The only remaining case is $s_1 \leq s_2 \leq f_1 \leq f_2$. In this case, the interval with the earliest finish time is either x itself, or it's some other interval $(s, f)$ such that $s_2 \leq s$ (because y is defined this way) and $f \leq f_1 \leq f_2$ (for it to have an earlier finish time than x). Either way, the interval having the earliest finish time is going to conflict with y. Therefore, discarding y is consistent with the ``earliest-finish-first" strategy.
+    \end{itemize}
+    Thus, we conclude that this strategy produces the same results as our standard ``earliest-finish-first" strategy, which proves that it is correct.
+    
+    \item[(i)]
+    \textbf{Strategy}: If any course x completely contains another course, discard x and recurse. Otherwise, choose the course y that ends last, discard all classes that conflict with y, and recurse.\\
+    \textbf{Proof}: Firstly, note that, if an interval x completely contains another interval y, and if any optimal solution contains x, then removing x and replacing it with y also gives an optimal solution. This is clear because any intervals not overlapping with x cannot overlap with y either, and because of the fact that at most one of x and y can be present in any solution (since they are overlapping).
+    
+    \medskip
+    
+    Due to the above observation, the process of ``discarding intervals x which completely contain some other interval" does not result in any losses, and we can do this first. If such an interval was going to be part of an optimal solution, then it can simply be replaced by an interval contained within it. If not, we can discard it anyway.
+    
+    \medskip
+    
+    Once this has been done, we are left with a set of intervals where none is contained within another. This means the interval with the latest ending time is also the interval with the latest starting time! This is because, if the interval that ends the latest was $(s, f)$, and the one that starts the latest was $(s', f')$, then we'd have $s \leq s' < f' \leq f$, and so the latter would be contained within the former, resulting in a contradiction. Thus, this strategy is equivalent to choosing the interval that starts the latest, discarding conflicts, and recursing.
+    
+    \medskip
+    
+    We have already proved that the ``latest-start-first" strategy is correct, in part (c). Therefore, this strategy is correct.
+\end{itemize}
+
+\newpage 
+\section*{Question 2}
+\label{q2}
+\addcontentsline{toc}{section}{Question 2}
+\setcounter{equation}{0}
+
+\textbf{Objective:} Give an algorithm that designs an ordering of the answer sheets to be sent to the computer so
+that the overall correction time (i.e. the time by which both the parts of all the answer sheets
+are corrected) is minimised.
+
+\hrulefill
+\smallskip
+
+Let the set of $n$ answer sheets be denoted by $A = \{A_1, A_2, \ldots, A_n\}$, the corresponding teachers be denoted by $T = \{T_1, T_2, \ldots, T_n\}$, and let $C$ denote the computer.
+
+\smallskip
+Each teacher has \textit{exactly} one answer sheet to correct, they can work independently of each other and can correct the sheet immediately after the sheet has passed through the computer (i.e Part-1 has been corrected)
+
+\smallskip
+Any ordering of the answer sheets requires \textit{at least} $\sum_{i=1}^n t_{i,1}$ total time, since \textit{all} answer sheets need to be corrected, and the computer can process the answer sheets only sequentially. Another way to see this is to set $t_{i,2} = 0 \ \forall i$ and check the total time taken.
+
+\smallskip
+Thus, the major thing that affects the total time is the time taken by the teachers.\\
+Since teachers can correct in parallel, intuitively, we need to utilize this parallelization effectively.
+
+\hrulefill
+\medskip
+
+We will show that only (b) is optimal, and provide counter examples for the rest.
+
+\medskip
+\textbf{Strategy (b):} \textit{Sort the jobs in non-increasing order of $t_{i,2}$}
+
+\medskip
+\textbf{Definition:} Let $u_O(i)$ denote the time taken, from the start, for the $i^{th}$ answer sheet to be \textit{completely} checked in a given ordering $O$. Then,
+$$
+    u_O(i) = \sum_{j=1}^{i}t_{j,1} + t_{i,2}
+$$
+Because $\sum_{j=1}^{i}t_{j,1}$ is the time when the $i^{th}$ answer sheet in an ordering exits the computer\footnote{Note that the computer works independently of the teachers} and $t_{i,2}$ is the time taken by the corresponding teacher to correct it, immediately after it exits the computer.
+
+\smallskip
+Thus, the total time ($\tau_O$) taken for an ordering $O$ is: $$\tau_O = \max(\{u_O(i)\}_{i=1}^n)$$
+
+\medskip
+\textbf{Claim:} Sorting the jobs in non-increasing order of $t_{i,2}$ is optimal\\
+\textbf{Proof:} (Induction on $n$)
+
+\smallskip
+\textbf{Base case:} $n=1$\\
+Exactly one ordering exists, which is also optimal
+
+\smallskip
+\textbf{Induction step:}\\
+\textbf{Induction hypothesis:} Our strategy yields an optimal ordering for $n = k$, $k \ge 1$
+
+\smallskip
+\textbf{To prove:} Our strategy yields an optimal ordering for $n = k+1$\\
+\textbf{Proof:} (Exchange Argument)
+
+\smallskip
+Let $O$ be an optimal ordering for $n=k+1$\\
+Let $A_m$ be an answer sheet in $O$ that has the least $t_{i,2}$\\
+Now, the set $O\backslash\{A_m\}$ has a cardinality of $n$\\ Let $O_r$ be the ordering obtained by sorting the elements in $O\backslash(A_m)$ in non-increasing order of $t_{i,2}$\\
+By the induction hypothesis, $O_r$ is optimal.\\
+Now, lets introduce $A_m$ back into $O_r$
+
+\medskip
+\textbf{Claim:} Introducing $A_m$ at the end is optimal\\
+\textbf{Proof:} (Via Contradiction)
+
+\smallskip
+For the sake of contradiction, assume:\\
+Inserting $A_m$ somewhere in the middle of $O_r$, but not at the end, (IIM Strategy) leads to strictly lesser total time than inserting at the end (IAE Strategy), i.e:
+$$
+    \max{(\{u_{IIM}(i)\}_{i=1}^n)} < \max{(\{u_{IAE}(i)\}_{i=1}^n)}
+$$
+Let $[n] = \{1,2,\ldots,n\}$ and let $t_{a,b}$ denote the time taken to correct the $b^{th}$ part of the $a^{th}$ answer sheet in the ordering given by IAE strategy, thus:
+$$ t_{i,2} \ge t_{j,2} \ \forall \ i \le j $$
+We will show that: 
+$$\forall i\in[n] \ \exists j \in [n] \ u_{IIM}(j) \ge u_{IAE}(i)$$
+Let $A_m$ be inserted just after the $p^{th}$ position in $O_r$ ($p \neq n-1$)
+
+\smallskip
+\textbf{Proof:} (By Cases)
+
+\smallskip
+\textbf{Case 1:} $1 \le i \le p$\\
+$u_{IIM}(i) = u_{IAE}(i)$, thus $j = i$
+
+\smallskip
+\textbf{Case 2:} $p < i < n$\\
+$u_{IIM}(i+1) \ge u_{IAE}(i)$, as $u_{IIM}(i+1) = u_{IAE}(i) + t_{n, 1}$
+
+\smallskip
+\textbf{Case 3:} $i = n$\\
+$u_{IIM}(n) = \sum_{i=1}^n(t_{i,1}) + t_{n-1, 2}$ and $u_{IAE}(n) = \sum_{i=1}^n(t_{i,1}) + t_{n, 2}$, as $t_{n-1,2} \ge t_{n,2}$, $u_{IIM}(n) \ge u_{IAE}(n)$, thus $j = i = n$
+
+\medskip
+As $\forall i\in[n] \ \exists j \in [n] \ u_{IIM}(j) \ge u_{IAE}(i)$, $\max{(\{u_{IIM}(i)\}_{i=1}^n)} \ge \max{(\{u_{IAE}(i)\}_{i=1}^n)}$, thus a contradiction.
+
+\medskip
+Therefore, after introducing $A_m$ at the end, we end up with an ordering for $n=k+1$ elements that is consistent with the ordering given by our strategy.
+
+\smallskip
+Thus, by induction, our strategy is optimal.
+
+\hrulefill
+\medskip
+
+\begin{center}
+    \textbf{\large{Counterexamples:}}
+\end{center}
+
+\subsection*{(a)}
+\textbf{Strategy:} \textit{Sort the jobs in non-increasing order of $t_{i,1}$}
+
+\smallskip
+\textbf{Counterexample:}\\
+Let $n=2$ and $A = \{(1,2), (2,1)\}$
+
+\smallskip
+Then the ordering suggested by the strategy will be $(A_2,A_1)$\\
+This takes a total time of 5 units.
+\begin{enumerate}[itemsep=-0.5ex,topsep=1pt]
+    \item ($T = 0$) $C$ takes 2 units to correct $A_2$ ($T = 2$)
+    \item ($T = 2$) $C$ corrects $A_1$ and the $T_2$ corrects $A_2$ ($T = 3$)
+    \item ($T = 3$) $T_1$ corrects $A_1$ ($T = 5$)
+\end{enumerate}
+(In these walkthroughs, $T$ denotes the ``global" time at the start of a step, and at the end of the step)
+
+\smallskip
+Whereas the optimal ordering will be $(A_1, A_2)$\\
+This takes a total time of 4 units.
+\begin{enumerate}[itemsep=-0.5ex,topsep=1pt]
+    \item ($T = 0$) $C$ takes 1 unit to correct $A_1$ ($T = 1$)
+    \item ($T = 1$) $C$ corrects $A_2$ and the $T_1$ corrects $A_1$ ($T = 3$)
+    \item ($T = 3$) $T_2$ corrects $A_2$ ($T = 4$)
+\end{enumerate}
+
+\subsection*{(c)}
+\textbf{Strategy:} \textit{Sort the jobs in non-increasing order of $t_{i,1} + t_{i,2}$}
+
+\smallskip
+\textbf{Counterexample:}\\
+Let $n=2$ and $A = \{(1,2), (3,1)\}$
+
+\smallskip
+Then the ordering suggested by the strategy will be $(A_2,A_1)$\\
+This takes a total time of 6 units.
+\begin{enumerate}[itemsep=-0.5ex,topsep=1pt]
+    \item ($T = 0$) $C$ takes 3 units to correct $A_2$ ($T = 3$)
+    \item ($T = 3$) $C$ starts correcting $A_1$ and the $T_2$ corrects $A_2$ ($T = 4$)
+    \item ($T = 4$) $T_1$ corrects $A_1$ ($T = 6$)
+\end{enumerate}
+
+\smallskip
+Whereas the optimal ordering will be $(A_1, A_2)$\\
+This takes a total time of 5 units.
+\begin{enumerate}[itemsep=-0.5ex,topsep=1pt]
+    \item ($T = 0$) $C$ takes 1 unit to correct $A_1$ ($T = 1$)
+    \item ($T = 1$) $C$ starts correcting $A_2$ and $T_1$ corrects $A_1$ ($T = 3$)
+    \item ($T = 3$) $C$ still requires 1 more unit to complete correcting $A_2$ ($T = 4$)
+    \item ($T = 4$) $T_2$ corrects $A_2$ ($T = 5$)
+\end{enumerate}
+
+\subsection*{(d)}
+\textbf{Strategy:} \textit{Sort the jobs in non-decreasing order of $t_{i,1}$}
+
+\smallskip
+\textbf{Counterexample:}\\
+Let $n=2$ and $A = \{(1,1), (2,2)\}$
+
+\smallskip
+Then the ordering suggested by the strategy will be $(A_1,A_2)$\\
+This takes a total time of 5 units.
+\begin{enumerate}[itemsep=-0.5ex,topsep=1pt]
+    \item ($T = 0$) $C$ takes 1 unit to correct $A_1$ ($T = 1$)
+    \item ($T = 1$) $C$ starts correcting $A_2$ and $T_1$ corrects $A_1$ ($T = 2$)
+    \item ($T = 2$) $C$ still requires 1 more unit to complete correcting $A_2$ ($T = 3$)
+    \item ($T = 3$) $T_2$ corrects $A_2$ ($T = 5$)
+\end{enumerate}
+
+\smallskip
+Whereas the optimal ordering will be $(A_2, A_1)$\\
+This takes a total time of 4 units.
+\begin{enumerate}[itemsep=-0.5ex,topsep=1pt]
+    \item ($T = 0$) $C$ takes 2 units to correct $A_2$ ($T = 2$)
+    \item ($T = 2$) $C$ corrects $A_1$ and $T_2$ starts correcting $A_2$ ($T = 3$)
+    \item ($T = 3$) $T_2$ still requires 1 more unit to complete $A_2$ and $T_1$ corrects $A_1$ ($T = 4$)
+\end{enumerate}
+
+\subsection*{(e)}
+\textbf{Strategy:} \textit{Sort the jobs in non-decreasing order of $t_{i,2}$}
+
+\smallskip
+\textbf{Counterexample:} Same as strategy (d) \\
+
+
+\newpage 
+\section*{Question 3}
+\label{q3}
+\addcontentsline{toc}{section}{Question 3}
+\setcounter{equation}{0}
+
+\textbf{Objective:} There are $n$ tasks where $i$-th task has an execution time $t_i$ and deadline $d_i$ . There are also precedence constraints amongst the tasks, specified by a directed acyclic graph having the tasks as vertices. If there is an edge from task $i$ to task $j$, then task $j$ cannot start before task $i$ has been completed. Describe a polynomial-time algorithm to determine whether all tasks can be completed before their respective deadlines, on a single machine. 
+
+\hrulefill
+
+\textbf{Algorithm:} 
+We can divide our algorithm into \textbf{two} parts: \par
+
+\textbf{Bottom-Up task scheduling based on the deadlines}
+\begin{enumerate}
+    \item Keep an empty \textbf{stack} which will store the order of execution.
+    
+    \item Among the \textbf{leaf} tasks(tasks with no successors) find the task with \textbf{latest deadline}.
+    
+    \item \textbf{Remove} the task and the edges associated with it and push it \textbf{into the stack}.
+    
+    \item Repeat Step \textbf{2} and \textbf{3} until the stack has all the nodes or the precedence graph is empty.
+    
+    \item The final filled stack shows the optimal execution order which is one of the best capable order for honouring the deadlines.
+\end{enumerate}
+
+\textbf{Execute tasks and check if every task can honour its deadline}
+\begin{enumerate}
+    \item Set a \texttt{flag} variable to \textbf{true}.
+    
+    \item Execute the tasks one by one and keep on calculating the completion time of each task according to the given execution order in the stack.
+    
+    \item If \texttt{completion time > deadline} for any task then set \texttt{flag=false} and \textbf{break}.
+    
+    \item \textbf{If} flag is true after executing the loop in steps \textbf{2} and \textbf{3} \textbf{then} all tasks can be completed before their respective deadlines \textbf{else} no.
+\end{enumerate}
+
+\hrulefill
+
+\textbf{Proof of correctness:} We will state some \textbf{claims} and prove them -
+\paragraph{}
+
+\textbf{Claim 1:} Our algorithm honours the precedence graph
+\medskip
+
+\textbf{Proof:} In the first part of our algorithm, we choose the task with the latest deadline from the set of tasks which have no successors. Because that is the complete set of tasks from which we can choose the one to be scheduled next(from the end).
+
+\medskip
+
+This means either it was a task with least precedence or all the tasks with a lower precedence than it have already been scheduled to be executed after it(pushed into the stack). 
+
+\medskip
+
+Thus, we never execute some task with lower precedence before one with higher precedence.
+
+\paragraph{}
+
+\textbf{Claim 2:} Scheduling task with the latest deadline at the end, among the tasks available is an optimal
+strategy.
+
+\medskip
+
+\textbf{Proof:} (Via Exchange Argument)\\
+We can restate our claim as: ``Any optimal strategy can be rearranged to form an ordering consistent with our strategy of keeping latest deadline at the end.'' Lets construct this:
+
+\medskip
+
+Let there be two tasks: \textbf{Task1} with execution time $t_1$ and deadline $d_1$, \textbf{Task2} with execution time $t_2$ and deadline $d_2$. Let $d_2 > d_1$ and assume both have no successors(i.e they are available to be scheduled next).
+
+Let the time at the start of execution be $s$.
+\\
+
+\textbf{Latest Deadline End(LDE) Strategy:} Execute Task2 after Task1.
+\\
+
+\textbf{Other Strategy:} Execute Task1 after Task2.
+
+\medskip
+
+\textbf{Exchange Argument:}
+
+\medskip
+
+Let the schedule designed by the ``Other Strategy'' satisfy the deadlines. Then:
+
+\begin{gather}
+    s + t_1 \leq d_2 \\
+    s + t_1 + t_2 \leq d_1
+\end{gather}
+
+The above two equations imply the following equations:
+
+\begin{gather}
+    s + t_2 \leq d_1 \\
+    s + t_2 + t_1 \leq d_1 < d_2
+\end{gather}
+
+Therefore \textbf{If} ``Other Strategy'' satisfies the deadlines, \textbf{then} LDE Strategy satisfies the deadlines as well.
+\medskip
+
+We can rewrite its contrapositive statement as well: \textbf{If} LDE Strategy fails to satisfy the deadlines, \textbf{then} any ``Other Strategy'' fails to satisfy the deadlines as well.
+\medskip
+
+Therefore, we have shown that if any optimal solution exists, then we can rearrange it (moving later deadlines after early deadlines) without making things worse. Therefore our strategy of scheduling the tasks is optimal at every step. These two claims prove our greedy strategy for selecting an optimal schedule. Once we have the optimal schedule, execution and checking is pretty straightforward.
+
+\hrulefill
+
+\newpage
+\textbf{Pseudo Implementation and Complexity Analysis:} 
+\medskip
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwInput{Adjacency list of the precedence DAG $\longrightarrow$ \texttt{adjlist}}
+\KwOutput{Boolean value stating if all the tasks can meet their deadlines}
+
+ \tcc{Assume we have precedence graph as an adjacency list}
+ stack schedule\;
+ maxheap heap \tcp*{Max-heap based on the deadline parameter}\
+ 
+ \tcc{This loop has a complexity of O(NlogN)}
+ \For{every leaf-task t}    
+ { 
+   heap $\xleftarrow{\texttt{PUSH}}$ t \tcp*{Pushing into heap has a complexity of O(logN))}
+ }\
+ 
+ \tcc{Pick out one element every iteration, this loop runs for N iterations}
+ \While{heap is not empty}{
+  storetop $\xleftarrow{\texttt{STORE}}$ heap$\xleftarrow{\texttt{POP}}$\;
+  schedule $\xleftarrow{\texttt{PUSH}}$ storetop\;
+  adjlist $\xleftarrow{\texttt{REMOVE}}$ storetop \tcp*{Visit each parent and remove the task from adjlist O(N)}\
+  
+  \tcc{The loop below will be discussed later}
+  \For{parent-tasks of storetop $\longrightarrow$ pt}    
+  { 
+    \If{pt has no successor}
+    {
+        heap $\xleftarrow{\texttt{PUSH}}$ pt\;
+    }
+  }
+ }\
+ 
+ \tcc{Straightforward O(N) implementation}
+ \For{$task_i$ in schedule}{
+    completion-time+= $t_i$\;
+    \If{completion-time\textgreater $d_i$}{
+        $\xleftarrow{\texttt{RETURN FALSE}}$
+    }
+ }
+ 
+ $\xleftarrow{\texttt{RETURN TRUE}}$
+\end{algorithm}
+
+Note: Even though the loop at line \textbf{13}
+ seems to have a complexity of \texttt{O(NlogN)} at \textbf{every} iteration, it is good to note that we are just pushing N tasks into the heap in total. So the overall complexity of that loop at line \textbf{13} summed over all the iterations must be \texttt{O(NlogN)}.
+ 
+ \medskip
+ 
+ Therefore, the overall complexity of the proposed pseudo implementation can be written as:
+ 
+ \begin{equation*}
+     \text{Overall complexity}= \texttt{O(NlogN)}(\text{line 4}) + \texttt{O($N^2$)}(\text{line 8}) + \texttt{O(NlogN)}(\text{line 13}) + \texttt{O(N)}(\text{line 20}) = \texttt{O($N^2$)}
+ \end{equation*}
+ 
+ 
+\newpage 
+\section*{Question 4}
+\label{q4}
+\addcontentsline{toc}{section}{Question 4}
+\setcounter{equation}{0}
+
+\subsection*{(a)}
+
+\textbf{Problem:} Find a minimum weight subset of edges to be removed so that there are no cycles in $G$. \\
+\textbf{Algorithm:}
+\begin{enumerate}
+    \item Let the Graph be (V, E, W)
+    \item Find maximum weight present - say, maxw.
+    \item Replace all weights w by (maxw + 1 - w).
+    \item Find the Minimum Spanning Tree T = (V, E') using Kruskal's Algorithm or Prim's Algorithm \footnote{Prim’s algorithm runs faster in dense graphs. Kruskal’s algorithm runs faster in sparse graphs. \\Ref: \url{https://www.geeksforgeeks.org/difference-between-prims-and-kruskals-algorithm-for-mst/}}
+    \item E\textbackslash E' is the required edge set
+\end{enumerate}
+\textbf{Time Analysis:} \\
+Finding maxw and updating all weights is O(E). \\
+Prim's Algorithm has running time O((V+E)logV) (from slides). \\
+We can find the complement of E' in O(E). \\
+Overall complexity is O((V+E)logV). \\
+\textbf{Proof of correctness:} \\
+We have proved the correctness of Prim's Algorithm in class (using Cut property).\\
+As we have reversed the ordering of edges based on weights by replacing w by (maxw + 1 - w) (we maintained the positive weight criterion), E' is actually is the subset of E representing the Maximum Spanning Tree. \\
+What we require is to find the subset of E such that no cycles are present. We are given a undirected connected graph, so what we would essentially require is to form a spanning tree. \\
+As we need to need the minimum weight subset that can be removed, we find the Maximum Spanning Tree and the complement of it would be the required subset. \\
+
+
+\subsection*{(b)}
+
+\textbf{Problem:} Suppose $R$ is a specified subset of the vertices of $G$. It is required to connect every vertex not in $R$ to some vertex in $R$ by a path. Determine the minimum weight subset of edges required to achieve this. \\
+\textbf{Algorithm and Implementation:}
+Inspired from Kruskal's Algorithm
+\begin{enumerate}
+    \item Let the Graph be $(V, E, W)$. We are given $R \subset V$.
+    \item All vertices in $R' = V \backslash R$ are marked as white.
+    \item All edges in $E$ are marked white if they join two vertices in $R'$ otherwise black.
+    \item For every vertex in $R'$, the edge to any vertex in $R$ with minimum weight is marked as white.
+    \item Initialize an empty collection $S$ of edges which represent the required subset of edges.
+    \item We form clusters of vertices in $R'$, initially all of them are independent clusters, and then we merge them as we proceed. And this cluster has a unique edge (if exists) joining a vertex in $R'$ with a vertex in $R$ associated with it.
+    \item All the edges are sorted according to weights.
+    \item For every edge taken in ascending order, if it black, move ahead.
+    \item If the chosen edge is white, it can be of two types - joining two vertices in $R'$ or joining a vertex in $R$ with a vertex in $R'$.
+    \item Case 1: White edge $\{u, v\}$ where $u, v \in R'$
+    \begin{enumerate}
+        \item Both vertices are white.\\
+        Let the clusters associated with $u$ and $v$ be $V_u$ and $V_v$.\\
+        Merge the clusters into one with associated edge as the one with lower weight of the edges associated with $V_u$ and $V_v$. Mark the other one as black.\\
+        Mark all edges between $V_u$ and $V_v$ as black. \\
+        Add $\{u, v\}$ to the collection $S$.
+        \item One is black and other is white (w.l.o.g. $u$ is black, $v$ is white).\\
+        Merge the clusters into one with associated edge as the edge associated with $V_u$. Mark the edge associated with $V_v$ as black. \\
+        Mark all edges between $V_u$ and $V_v$ as black.\\
+        Mark all vertices in $V_v$ as black.\\
+        Add $\{u, v\}$ to the collection $S$.
+    \end{enumerate}
+    \item Case 2: White edge $\{u, v\}$ where $u \in R', v \in R$
+    \begin{enumerate}
+        \item $u$ is white.\\
+        Let the cluster associated with $u$ be $V_u$.\\
+        Mark all vertices in $V_u$ and $\{u, v\}$ as black.\\
+        Add $\{u, v\}$ to the collection $S$.
+    \end{enumerate}
+\end{enumerate}
+\textbf{Proof of correctness:}
+\begin{enumerate}
+    \item The algorithm would stop.\\
+    As the number of edges are finite and we are iterating over them, the algorithm must end.
+    \item The edges marked as black won't be needed in the formation of the required subset.\\
+    Edges between vertices of $R$ are redundant as even without them, the condition is unaffected. So, they were marked as black.\\
+    For every vertex in $R'$, only the minimum weight edge from it to a vertex $R$ is needed as all we need to do is connect it at least one of the vertex in $R$. So, others were initialized as black.\\
+    Once two clusters are joined, we don't require any edges between them as they are all connected. So, the edges between them are marked as black.\\
+    When a white cluster is merged with black cluster, we discard the edge associated with the white cluster as the vertices are now connected to some vertex in $R$ via a path through the black cluster. So, it is also marked as black.\\
+    There were no other operation which marked the edge as black.
+    \item As the graph is connected, no white cluster can remain, as it would have an edge either to some black cluster or to a vertex in $R$.
+\end{enumerate}
+\textbf{Time Analysis:} \\
+Initialization takes O($|V|+|E|$).\\
+Sorting of edges - O($|E|log|E|$).\\
+All edges are marked as black, exactly once - O($|E|$). ---(1)\\
+All vertices in $R'$ are marked as black, exactly once - O($|V|)$. ---(2)\\
+We merge clusters of vertices and copy the smaller of the cluster into the bigger one - O($|V|log|V|)$.\\ 
+As in every step, at least one of (1) or (2) occur - O($|E| + |V|$).\\
+Overall complexity is O($|V|log|V| + |E|log|E|$).
+\subsection*{(c)}
+
+\textbf{Problem:} Find the second minimum weight spanning tree in $G$. Assume the weights are distinct. \\
+\textbf{Algorithm:}
+Inspired from Kruskal's Algorithm
+\begin{enumerate}
+    \item Sort the edges by weight and find MST using Kruskal's Algorithm.
+    \item For each edge in the MST, remove it from the set and apply Kruskal's Algorithm on the remaining.
+    \item The new Spanning Tree has total weight increased by the difference of the weights of the edge removed and added.
+    \item Do step 2 for all edges in MST and take minimum of all.
+\end{enumerate}
+\textbf{Time Analysis:} \\
+Sorting the edges takes O($|E|log|E|$) time. \\
+Kruskal's Algorithm takes O($|E|log|V|$) time using Disjoint Set Union \footnote{Reference: \url{ https://cp-algorithms.com/graph/mst_kruskal_with_dsu.html}} or O($|E|log|V| + |V|^2$) in simplest implementation. \\
+It would take O(E) for applying Kruskal's Algorithm to finding the last edge. \\
+This is repeated $|V| - 1$ times as MST contains V-1 edges. \\
+Overall complexity is O($|E|log|E| + |E|log|V| +|V|^2 + |E|\cdot|V|$) = O($|E|\cdot|V|$). \\
+($|E| \ge |V| - 1$ as the given graph is connected). \\
+\textbf{Proof of correctness:} \\
+Spanning trees have exactly $|V| - 1$ edges. So, second minimum spanning tree must have at least one edge that is not in the minimum spanning tree. If a second minimum spanning tree has exactly one edge, say $(x, y)$, that is not in the minimum spanning tree, then it has the same set of edges as the minimum spanning tree, except that $(x, y)$ replaces some edge, say $(u, v)$, of the minimum spanning tree. In this case, $T' = (T - \{(u, v)\}) \cup \{(x,y)\}$. \\
+Thus, all we need to show is that by replacing two or more edges of the minimum spanning tree, we cannot obtain a second minimum spanning tree. \\
+Proof by contradiction: \\
+Let $T$ be the minimum spanning tree of $G$, and suppose that there exists a second minimum spanning tree $T'$ that differs from $T$ by two edges. There are at least two edges in edge set $T - T'$, and let $(u, v)$ be the edge in $T - T'$ with minimum weight. If we were to add $(u, v)$ to $T'$, we would get a cycle $c$. This cycle contains some edge $(x, y)$ in $T - T'$ (since otherwise, T would contain a cycle). \\
+We claim that $w(x, y) > w(u, v)$. We prove this claim by contradiction, so let us assume that $w(x, y) < w(u, v)$. (edge weights are distinct, no need for equality). \\
+If we add $(x, y)$ to $T$ , we get a cycle $c'$, which contains some edge $(u', v')$ in $T-T'$ (since otherwise, $T'$ would contain a cycle). Therefore, the set of edges $T' = T - \{(u', v')\} \cup \{(x,y)\}$ forms a spanning tree, and we must also have $w(x, y) > w(u', v')$, since otherwise $T''$ would be a spanning tree with weight less than $w(T)$. Thus, $w(u', v') < w(x,y) < w(u,v)$, which contradicts our choice of $(u,v)$ as the edge in $T - T'$ of minimum weight.
+Since the edges $(u, v)$ and $(x,y)$ would be on a common cycle $c$ if we were to add $(u, v)$ to $T'$, the set of edges ($T' - \{(x, y)\}) \cup \{(u, v)\}$ is a spanning tree, and its weight is less than $w(T')$. Moreover, it differs from $T$ (because it differs from $T'$ by only one edge). Thus, we have formed a spanning tree whose weight is less than $w(T')$ but is not $w(T)$. Hence, $T'$ was not a second minimum spanning tree. \\
+
+Now, that we have proven that the second minimum spanning tree has all edges from MST except one, we iterate through all possible combinations of removing an edge $(|V|-1)$ combinations, and find the minimum of them all. \\
+
+\textbf{More about it:}\\
+This is a fairly famous modification of MST problem. On searching about it, I came across several algorithms.\\
+My above described algorithm is similar to the first algorithm described on \url{https://cp-algorithms.com/graph/second_best_mst.html}.\\
+The algorithm with basic implementation has O($|V|\cdot|E|$) time complexity and it can be implemented by modelling it as Lowest Common Ancestor Problem and using those properties bringing the complexity down to O($|E|log|V|$).\\
+Another implementation I found, quite similar to mine but using Prim's algorithm using Fibonacci Heap implementation of priority queue is described on \url{https://viterbi-web.usc.edu/~shanghua/teaching/Spring2010/public_html/files/HW2_Solutions_A.pdf}. This has time complexity of O($|V|^2$)
+
+\end{document}
