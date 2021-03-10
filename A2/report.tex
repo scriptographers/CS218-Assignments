@@ -1,0 +1,1063 @@
+\documentclass[11pt, fleqn]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{hyperref}
+\usepackage{ulem}
+\usepackage{enumitem}
+\usepackage[left=0.75in, right=0.75in, bottom=0.75in, top=1.0in]{geometry}
+\usepackage{floatrow}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage[export]{adjustbox}
+\usepackage{sectsty}
+\sectionfont{\centering}
+\usepackage{hyperref}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[perpage]{footmisc}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{190050020 \& 190100044 \& 190100055 \& 190260036}
+\rhead{CS 218: Assignment 2}
+\renewcommand{\footrulewidth}{1.0pt}
+\cfoot{Page \thepage}
+
+\SetKwInput{KwInput}{Input}                % Set the Input
+\SetKwInput{KwOutput}{Output}              % set the Output
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+\newcommand{\boxedeq}[2]{\begin{empheq}[box={\fboxsep=6pt\fbox}]{align}\label{#1}#2\end{empheq}}
+\setlength{\parindent}{0em}
+\renewcommand{\arraystretch}{2}
+
+\title{CS 218: Assignment 2}
+\author{
+\begin{tabular}{|c|c|c|c|}
+     \hline
+     Ankit Kumar Misra & Devansh Jain & Harshit Varma & Richeek Das \\
+     \hline
+     190050020 & 190100044 & 190100055 & 190260036\\
+     \hline
+\end{tabular}
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\thispagestyle{empty}
+\setcounter{page}{0}
+\renewcommand{\arraystretch}{1}
+
+
+\newpage 
+\section*{Question 1}
+\label{q1}
+\addcontentsline{toc}{section}{Question 1}
+\setcounter{equation}{0}
+
+\textbf{Problem:}\\
+Given an $n$-digit number $a$, give an algorithm to compute $a^2$ that runs in time $n^{\log_3 6}$.\\
+Give the correctness of your algorithm and a detailed justification for its time complexity.
+
+~\\
+\textbf{Principle:}\\
+Inspired by Karatsuba's Multiplication Algorithm, we use the following identity to our advantage.
+\begin{equation}
+    \label{FSQ}
+    \begin{aligned}
+        (10^{2m} a_2 + 10^{m} a_1 + a_0)^2 &= 10^{4m} (a_2^2) + 10^{3m} (2 a_2 a_1) + 10^{2m} (a_1^2 + 2 a_2 a_0) + 10^{m} (2 a_1 a_0) + a_0^2 \\
+        (2 a_2 a_1) &= (a_2)^2 + (a_1)^2 - (a_2 - a_1)^2 \\
+        (2 a_2 a_0) &= (a_2)^2 + (a_0)^2 - (a_2 - a_0)^2 \\
+        (2 a_1 a_0) &= (a_1)^2 + (a_0)^2 - (a_1 - a_0)^2 \\
+        (10^{2m} a_2 + 10^{m} a_1 + a_0)^2 &= 10^{4m} [(a_2)^2] + 10^{3m} [(a_2)^2 + (a_1)^2 - (a_2 - a_1)^2] \\
+            & \hspace{2em} + 10^{2m} [(a_2)^2 + (a_1)^2 + (a_0)^2 - (a_2 - a_0)^2] \\
+            & \hspace{2em} + 10^{m} [(a_1)^2 + (a_0)^2 - (a_1 - a_0)^2] + [(a_0)^2] \\
+    \end{aligned}
+\end{equation}
+
+~\\
+\textbf{Pseudo Implementation:}\\
+\begin{algorithm}[H]
+    \SetAlgoLined
+    \DontPrintSemicolon
+    \caption{FSQ($a, n$)}
+    \KwInput{Given $a$ and $n$, number of digits in $a$}
+    \KwOutput{$a^2$, square of $a$}
+    \eIf{$n = 1$} {
+        \tcc{If $a$ is single digit then compute square in O(1)}
+        \KwRet $(a * a)$\;
+    }{
+        \tcc{Divide: Splitting $a$ as $10^{2m} a_2 + 10^{m} a_1 + a_0$}
+        $m \leftarrow \ceil{n/3}$\;
+        $a_2 \leftarrow \floor{a/10^{2m}}$\;
+        $a_1 \leftarrow \floor{(a \mod 10^{2m})/10^{m}}$\;
+        $a_0 \leftarrow (a \mod 10^{m})$\;
+        \tcc{Recurse: Calculating squares of six $\ceil{n/3}$ digits numbers}
+        $s_{22} \leftarrow \text{FSQ}(a_2, m)$ \;
+        $s_{11} \leftarrow \text{FSQ}(a_1, m)$ \;
+        $s_{00} \leftarrow \text{FSQ}(a_0, m)$ \;
+        $s_{21} \leftarrow \text{FSQ}(|a_2 - a_1|, m)$ \;
+        $s_{20} \leftarrow \text{FSQ}(|a_2 - a_0|, m)$ \;
+        $s_{10} \leftarrow \text{FSQ}(|a_1 - a_0|, m)$ \;
+        \tcc{Combine: Use the calculated squares to obtain square of $a$}
+        $s \leftarrow 10^{4m} * (s_{22})$\;
+        $s \leftarrow s + 10^{3m} * (s_{22} + s_{11} - s_{21})$\;
+        $s \leftarrow s + 10^{2m} * (s_{22} + s_{11} + s_{00} - s_{20})$\;
+        $s \leftarrow s + 10^{m} * (s_{11} + s_{00} - s_{10})$\;
+        $s \leftarrow s + s_{00}$\;
+        \KwRet $s$\;
+    }
+\end{algorithm}
+
+~\\
+\textbf{Correctness:}\\
+Follows from identity (Eq \ref{FSQ}) mentioned in the Principle.
+
+\textbf{Time Analysis:}\\
+First, let's state the primitive operations:
+\begin{enumerate}[noitemsep]
+    \item Adding two single digit numbers in $\Theta(1)$ time
+    \item Multiplication of two single digit numbers in $\Theta(1)$ time
+    \item Integer division of two single digit numbers in $\Theta(1)$ time
+    \item Adding a zero at the end in $\Theta(1)$ time
+    \item Removing a digit from the end in $\Theta(1)$ time
+\end{enumerate}
+From these we can get the following operations in $\Theta(n)$ time:
+\begin{enumerate}[noitemsep]
+    \item Adding two $n$ digit numbers
+    \item Subtracting two $n$ digit numbers (or finding difference)
+    \item Multiplication of any number with $10^{n}$
+    \item Integer division of a $n$ digit number by a single digit number
+    \item Integer division of any number by $10^n$
+    \item Calculating remainder of any number upon integer division by $10^n$
+\end{enumerate}
+
+~\\
+Let $T(n) := $ Maximum running time of FSQ$(a,n)$ for any $n$ digit number $a$ \\~\\
+$T(1) = \Theta(1)$ (From Line 2) \\~\\
+Time taken for Line 8 thru 13 $\le 6 T(\ceil{n/3})$ \\
+Operations involved in Line 4 thru 7 and Line 14 thru 18 take $\Theta(n)$ time \\
+$T(n) \le 6 T(\ceil{n/3}) + \Theta(n)$ \\
+
+The recursion tree method transforms this recurrence into an increasing geometric series, \\
+Or directly applying Master Theorem on $T(n) = 6 T(n/3) + \Theta(n)$, \\
+We get $T(n) = \Theta(n^{\log_3 6})$ as desired.
+
+~\\
+\textbf{Comments:}
+\begin{enumerate}[noitemsep]
+    \item The reason for converting $T(\ceil{n/3})$ to $T(n/3)$ is stated in Page 34 of Jeff Erickson's book "Algorithms".
+    \item Instead of using the identity $2ab = (a)^2 + (b)^2 - (a - b)^2$, we could have used $2ab = (a + b)^2 - (a)^2 - (b)^2$, but $(a + b)$ would have been a $m+1$ digit number and the recursion would have been more complex though the running time would still be $\Theta(n^{\log_3 6})$,\\
+    Reference: Footnote on Page 41 of Jeff Erickson's book "Algorithms".
+\end{enumerate}
+
+
+
+\newpage 
+\section*{Question 2}
+\label{q2}
+\addcontentsline{toc}{section}{Question 2}
+\setcounter{equation}{0}
+
+\textbf{Problem}:\\
+Suppose we are given the heights of all \textbf{n} heroes, in order from left to right, in an array \textbf{Ht[1 .. n]}. (No two heroes have the same height.) Then we can compute the \textit{Left} and \textit{Right} targets of each hero in $\mathcal{O}(n^2)$ time using the following brute-force algorithm.
+
+\begin{algorithm}[H]
+    \SetAlgoLined
+    \DontPrintSemicolon
+    \caption{\textbf{WhoTargetsWhom}(\textit{Ht}[1\dots n])}
+    \KwInput{\textbf{Ht} array containing heights of the \textbf{n} heroes}
+    \KwOutput{\textit{Left} and \textit{Right} targets of each hero}
+    \For{$j = 1$ to $n$} {
+        \tcc{Find the left target \textbf{L[j]} for hero \textbf{j}}
+        $L[j] \leftarrow None$\;
+        \For{$i = 1$ to $j-1$}{
+            \If{$Ht[i] > Ht[j]$} {
+                $L[j] \leftarrow i$\;
+            }
+        }
+        \tcc{Find the right target \textbf{R[j]} for hero \textbf{j}}
+        $R[j] \leftarrow None$\;
+        \For{$k = n$ to $j+1$}{
+            \If{$Ht[k] > Ht[j]$} {
+                $R[k] \leftarrow k$\;
+            }
+        }
+    }
+    return $L[1 \cdots n], R[1 \cdots n]$\;
+\end{algorithm}
+
+~\\
+
+\begin{enumerate}
+    \item \textbf{Problem:} Describe a divide-and-conquer algorithm that computes the output of \textbf{WhoTargetsWhom} in $\mathcal{O}(nlogn)$ time. 
+    ~\\
+    
+    \textbf{Approach}: Since we see the key points ``divide and conquer'' and a linearithmic time complexity, lets aim for the recurrence relation $\longrightarrow T(n) = 2\times T(n/2) + \mathcal{O}(n)$.
+    \begin{itemize}
+        \item \textbf{Subproblems}: We break the main problem with an array of $n$ elements from the middle into two arrays of $n/2$ elements each. We solve the subproblems of size $n/2$ and get the \textit{left} and \textit{right} targets of each hero in the sub arrays. Lets see how we combine the results from the $n/2$ sized arrays into the result for $n$ elements.
+        
+        \item $\mathcal{O}(n)$ \textbf{Combination step}: We will use a two-pointer approach for combining the results from the two sub-arrays. \textbf{Few things to notice in order to understand the solution:}
+        \medskip
+        
+        \textbf{Claim 1: } Any hero who has been assigned a left or right target in the subproblems, will retain the same target after the combination.
+        \paragraph{}
+        \textbf{Proof: } If a hero could find any of its targets in the subproblem then the distance from the hero to the target is $< n/2$. Let's \textbf{assume} that the target obtained from the subproblem is wrong and it gets replaced by some other target in the combination step. If that happens then new distance between hero and target is $> n/2$. We already had a target which was closer! Contradiction. Our assumption is wrong. Therefore, claim is true.
+        
+        \medskip
+        
+        Due to the last claim, we can ignore the heroes in the left subarray who already have a right target.
+        \medskip
+        
+        \textbf{Claim 2: } Let $a[1 \cdots k]$ be the left sub array with the heroes without any right target. Array $a[1 \cdots k]$ is sorted in descending order.
+        \paragraph{}
+        \textbf{Proof: } \textbf{Assume} $a[1 \cdots k]$ is not sorted in descending order. This means there exists some index $z$ such that, $a[z-1]<a[z]$. Therefore, the hero at $z-1$ can have a potential right target at $z$. But by definition, $a[1 \cdots k]$ doesn't have any heroes with right targets. Contradiction. Therefore, our assumption is wrong. Claim is correct.
+        \medskip
+        
+        Second claim is \textbf{important} for using the two-pointers strategy.
+        \medskip
+        
+        \textbf{The actual combining step: } \textbf{We will solve the problem for finding the right target.} Say, we have solved the subproblems for $a1 = a[1 \cdots m]$ and $a2 = a[m+1 \cdots n]$, where $a$ is the original array and $m = \floor*{\frac{n}{2}}$.
+        
+        \begin{enumerate}
+            \item We keep two pointers $i$ and $j$. Initially $i = m$ and $j = m+1$.
+            
+            \item \texttt{while} $a[j] < a[i]$ we do $j++$.
+            
+            \item \texttt{If} $a[j] > a[i]$ we set $j$ as the right target of $i$.
+            
+            \item \texttt{while} $a[j] > a[i]$ we do $i--$ (Because of \textbf{claim 2}, the right target of $i' < i$ is definitely $j' \geq j$). We keep a check and skip $i$ which already have a right target(because of \textbf{claim 1}).
+            
+            \item We do all of these steps till, $i>0$ \textbf{and} $j<n+1$.
+        \end{enumerate}
+        In every step we either incremented $j$ or decremented $i$. Therefore, we can have at max $n$ iterations. Therefore the \textbf{combining step} algorithm is $\mathcal{O}(n)$!
+        
+        \item \textbf{Base case: } We have two subproblems each of size 1(we can't break further). We can check if the element in the right subarray is the right target of the element in the left subarray using a single comparison. Therefore base case solved in $\mathcal{O}(1)$ time! $\textbf{T(1)=c}$.
+        
+        \item \textbf{Proof of Correctness: } All the combination steps and the claims used are proved above. Still, lets propose a proof of correctness which shows that \textbf{step (c)} of our combination step indeed chooses the correct right targets. \par
+        \setlength{\parindent}{2em} \textbf{Proof: } Step \textbf{(b)} increments the right pointer \textbf{j} keeping \textbf{i} fixed until $a[j] > a[i]$. We choose the first such \textbf{j} for which this happens.Therefore, we have the smallest $j-i$ distance for every $i$! Rest of it follows trivially from \textbf{Claim 2}.
+        
+        \item \textbf{Summing up: } From the combination step and the base case, we see that the recurrence relation we aimed for before, is indeed possible. We have a time complexity of $\mathcal{O}(nlogn)$. If the above conclusion seems difficult to follow, see the example that follows.
+        \medskip
+        
+        The exact same idea can be used to find the \textbf{left targets} in $\mathcal{O}(nlogn)$ time! 
+    
+    
+        \clearpage
+        \textbf{Example}: Let \textbf{Ht[1 $\cdots$ n] = $\{1,3,4,2,7\}$}. The recurrence tree and combinations:
+        
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{1\textwidth}
+              \centering
+              \includegraphics[width=1\linewidth]{q2ex1.jpg}
+            %   \captionof{}
+              \label{fig:q2ex1}
+            \end{minipage}
+        \end{figure}
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{1\textwidth}
+              \centering
+              \includegraphics[width=0.6\linewidth]{q2ex2.jpg}
+            %   \captionof{}
+              \label{fig:q2ex1}
+            \end{minipage}
+        \end{figure}
+    
+    \end{itemize}
+    
+    
+    \item \textbf{Problem: } Prove that at least $\floor*{\frac{n}{2}}$ of the $n$ heroes are targets. That is, prove that the output arrays $R[0 \cdots n - 1]$ and $L[0 \cdots n - 1]$ contain at least $\floor*{\frac{n}{2}}$ distinct values (other than None).
+    ~\\
+    
+    \textbf{Proof: } It is easy to see that, \textbf{for a hero to be not a target} in a particular round $\longrightarrow$ ``It must be a local minimum''. Which means, \textbf{if} hero \textbf{i} is not a target, then $a[i-1] > a[i]$ and $a[i] < a[i+1]$. If any of these inequalities do not hold, then $a[i]$ will be the right target of $a[i-1]$ or the left target of $a[i+1]$ respectively.
+    \medskip
+    
+    If we want to find the \textbf{minimum number of targets} we need to \textbf{maximise the number of non-targets}. Therefore we want to maximise the number of \textbf{local minima}!
+    \medskip
+    
+    Notice that \textbf{we cannot have two local minima} adjacent to each other. This sets the maximum possible number of local minima to $\longrightarrow$ $\ceil*{\frac{n}{2}}$. Example of such a case: $[lm,t,lm,t,lm,t,lm]$ where $lm$ is local minima and $t$ is the target.
+    \medskip
+    
+    Therefore there are \textbf{atleast} $n - \ceil*{\frac{n}{2}} = \floor*{\frac{n}{2}}$ \textbf{heroes who are targets}.
+    
+    \item \textbf{Problem: } Describe and analyze an algorithm to compute the \textbf{number of rounds} before Dr. Metaphor’s deadly process finally ends. Algorithm should run in $\mathcal{O}(n)$ time.
+    \paragraph{}
+    
+    \textbf{Proof: } As we saw in the last problem, heroes which are \textbf{non-targets in a particular round}, must be \textbf{local minima}. So our idea would be to find all the local minimas in every round. We can easily do that in $\mathcal{O}(n)$ time complexity (we will see the pseudo-code shortly). Also, from the last proof we see that, we will find atleast $\floor*{\frac{n}{2}}$ targets in each round  having $n$ heroes.
+    \medskip
+    
+    Therefore, we find and \textbf{retain} the \textbf{local minimas in every round} and remove the rest. So, in each step our problem is getting reduced to a new sub-problem with a worst case of $\ceil*{\frac{n}{2}}$ heroes.
+    \medskip
+    
+    We can write this in the form of a \textbf{recurrence relation:}%
+    \begin{equation*}
+        T(n) = T(\ceil*{\frac{n}{2}}) + \mathcal{O}(n)
+    \end{equation*}
+    
+    Let's solve this recurrence. Let $n=2^m$. Then, the last equation turns into $T(n) = T(n/2) + \mathcal{O}(n)$. We can directly apply masters theorem on this new equation. We get, $\longrightarrow$ $T(n) = \Theta(n)$
+    \medskip
+     
+    If $n \neq 2^m$ then we can say, there exists $m$ such that $2^m < n < 2^{m+1}$. Therefore,%
+    \begin{gather*}
+        T(2^m) < T(n) < T(2^{m+1})\\
+        \implies 2^m < T(n) < 2^{m+1}
+    \end{gather*}
+    So, as $m \longrightarrow \infty$, $T(n) \longrightarrow 2^m = n$. Therefore, $T(n)$ is $\Theta(n)$. Check the pseudo-code in the next page.\\
+    
+    \begin{algorithm}[H]
+        \SetAlgoLined
+        \DontPrintSemicolon
+        \caption{NumberOfRounds($\{Ht\}_{i=1}^{n}$)}
+        \KwInput{The Heights of all the heroes ordered as given in the array $\{Ht\}_{i=1}^{n}$}
+        \KwOutput{An integer storing the number of rounds need to be taken to end the game}
+        \If{$Ht$ has less than 2 elements} {
+            return 0\;
+        }
+        \tcc{localMinimas will store the indexes of the local minimas in Ht}
+        
+        \If{$Ht[1] < Ht[2]$}{
+            $localMinimas \leftarrow 1$\;
+        }
+        
+        \If{$Ht[n-1] > Ht[n]$}{
+            $localMinimas \leftarrow n$\;
+        }
+        
+        \For{$k = 2$ to $n-1$}{
+            \If{$Ht[k-1] > Ht[k] < Ht[k+1]$}{
+                $localMinimas \leftarrow k$\;
+            }
+        }
+        \texttt{Remove the indices not in localMinimas from Ht}\;
+        return $1 + NumberOfRounds({Ht}_{i=1}^{z})$\;
+    \end{algorithm}
+    
+\end{enumerate}
+
+
+\newpage 
+\section*{Question 3}
+\label{q3}
+\addcontentsline{toc}{section}{Question 3}
+\setcounter{equation}{0}
+
+\subsection*{Problem (3x2n):}
+Suppose you are given rectangular tiles with height 1 and width 2. You have to use these to tile a rectangle of height 3 and width 2n. \\
+Describe an $\mathcal{O}(n)$ time algorithm to find the number of ways in which this can be done. \\
+Note that tiling a rectangle means covering it by tiles whose interiors are disjoint. A tile may be placed vertically or horizontally. 
+
+\subsection*{Solution:}
+
+The required complexity of $\mathcal{O}(n)$ suggests a Dynamic Programming approach. \\
+
+\textbf{Step 1 - Types of Sub-Problems:}\\
+Let $f(k)$ denote number of ways to tile a $3 \times 2k$ rectangle using $2 \times 1$ tiles.\\
+Let $g(k)$ denote number of ways to tile a $3 \times (2k+1)$ rectangle with a corner (top-right or bottom-right) missing using $2 \times 1$ tiles.\\
+We need to compute $f(n)$.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{3x2n-base.jpg}
+    \caption{Defining $f(n)$ and $g(n)$}
+\end{figure}
+
+
+\textbf{Step 2 - Recursive Relation:}\\
+We have a mutual recursion relationship between $f(.)$ and $g(.)$ \\
+Base Case: \\
+$f(0) = 1$\\
+$g(0) = 1$\\
+Recursive definition: \\
+$f(n) = f(n-1) + 2g(n-1)$ $\forall \ n \ge 1$\\
+$g(n) = g(n-1) + f(n)$ $\forall \ n \ge 1$
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=0.15\textwidth]{3x2n-f.jpg}
+    \caption{Proof of recursive definition of $f(n)$, for $n \ge 1$}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=0.15\textwidth]{3x2n-g.jpg}
+    \caption{Proof of recursive definition of $g(n)$, for $n \ge 1$}
+\end{figure}
+
+\textbf{Step 3 - Memoization Strategy:}\\
+Two arrays, one each for storing values of $f(i)$ and $g(i)$, can be used for memoization.\\
+Let us call these arrays \texttt{F} and \texttt{G}, each of size $n$.\\
+
+\textbf{Step 4 - Acyclicity of Dependencies:}\\
+$f(i)$ calls $g(.)$ with index $\le i-1$ which calls $f(.)$ with index $\le i-1$.\\
+$f(i)$ calls $f(.)$ with index $\le i-1$.\\
+Thus, $f(i)$ would never call itself.\\
+$g(i)$ calls $f(.)$ with index $\le i$ which calls $g(.)$ with index $\le i-1$.\\
+$g(i)$ calls $g(.)$ with index $\le i-1$.\\
+Thus, $g(i)$ would never call itself.\\
+
+\textbf{Step 5 - Time Complexity Analysis:}\\
+The total number of sub-problems is $\mathcal{O}(n)$ (including both $f(.)$ and $g(.)$).\\
+The time taken per sub-problem is $\mathcal{O}(1)$ (basic arithmetic operations on integers).\\
+Total time = $\mathcal{O}(n) \times \mathcal{O}(1)$ = $\mathcal{O}(n)$ as required.\\
+
+\textbf{Psuedo Implementation:}\\
+\begin{algorithm}[H]
+    \SetAlgoLined
+    \DontPrintSemicolon
+    
+    \caption{CountWays3x2n($n$)}
+
+    \KwInput{$n$, integer}
+    \KwOutput{Number of ways of tiling a $3 \times 2n$ rectangle using $2 \times 1$ tiles}
+
+    % Set Function Names
+    \SetKwFunction{Ff}{$f$}
+    \SetKwFunction{Fg}{$g$}
+
+    % Write Function with word ``Def''
+    \SetKwProg{Fn}{Def}{:}{}
+    \Fn{\Ff{$i$, \texttt{F}, \texttt{G}}}{
+        \If {\texttt{F}$[i]$ is defined}{
+            \KwRet \texttt{F}$[i]$\;
+        }
+        \texttt{F}$[i]$ $\leftarrow$ $f(i-1, \texttt{F}, \texttt{G}) + 2 * g(i-1, \texttt{F}, \texttt{G})$\;
+        \KwRet \texttt{F}$[i]$\;
+    }
+    \;
+    \Fn{\Fg{$i$, \texttt{F}, \texttt{G}}}{
+        \If {\texttt{G}$[i]$ is defined}{
+            \KwRet \texttt{G}$[i]$\;
+        }
+        \texttt{G}$[i]$ $\leftarrow$ $g(i-1, \texttt{F}, \texttt{G}) + f(i, \texttt{F}, \texttt{G})$\;
+        \KwRet \texttt{G}$[i]$\;
+    }
+    \;
+    \texttt{F}, \texttt{G} empty array initialized\;
+    \texttt{F}$[0]$ $\leftarrow$ 1\;
+    \texttt{G}$[0]$ $\leftarrow$ 1\;
+    \;
+    \KwRet $f(n, \texttt{F}, \texttt{G})$\;
+\end{algorithm}
+
+\subsection*{Problem (4xn):}
+Suppose you are given rectangular tiles with height 1 and width 2. You have to use these to tile a rectangle of height 4 and width n. \\
+Describe an $\mathcal{O}(n)$ time algorithm to find the number of ways in which this can be done. \\
+Note that tiling a rectangle means covering it by tiles whose interiors are disjoint. A tile may be placed vertically or horizontally. 
+
+\subsection*{Solution:}
+
+The required complexity of $\mathcal{O}(n)$ suggests a Dynamic Programming approach. \\
+
+\textbf{Step 1 - Types of Sub-Problems:}\\
+Let $f(k)$ denote number of ways to tile a $4 \times k$ rectangle using $2 \times 1$ tiles.\\
+Let $g(k)$ denote number of ways to tile a $4 \times (k+1)$ rectangle with a corner (top-right or bottom-right) and its vertically neighbouring box missing using $2 \times 1$ tiles.\\
+Let $h(k)$ denote number of ways to tile a $4 \times (k+1)$ rectangle with two right edge's center boxes missing using $2 \times 1$ tiles.\\
+We need to compute $f(n)$.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{4xn-base.jpg}
+    \caption{Defining $f(n)$, $g(n)$ and $h(n)$}
+\end{figure}
+
+
+\textbf{Step 2 - Recursive Relation:}\\
+We have a mutual recursion relationship between $f(.)$, $g(.)$ and $h(.)$ \\
+Base Case: \\
+$f(0) = 1$, $f(1) = 1$\\
+$g(0) = 1$, $g(1) = 2$\\
+$h(0) = 0$, $h(1) = 1$\\
+Recursive definition: \\
+$f(n) = f(n-1) + f(n-2) + 2g(n-2) + h(n-1)$ $\forall \ n \ge 2$\\
+$g(n) = g(n-1) + f(n)$ $\forall \ n \ge 2$\\
+$h(n) = h(n-2) + f(n-1)$ $\forall \ n \ge 2$
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=0.42\textwidth]{4xn-f.jpg}
+    \caption{Proof of recursive definition of $f(n)$, for $n \ge 2$}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=0.19\textwidth]{4xn-g.jpg}
+    \caption{Proof of recursive definition of $g(n)$, for $n \ge 2$}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=0.19\textwidth]{4xn-h.jpg}
+    \caption{Proof of recursive definition of $h(n)$, for $n \ge 2$}
+\end{figure}
+
+\textbf{Step 3 - Memoization Strategy:}\\
+Three arrays, one each for storing values of $f(i)$, $g(i)$ and $h(i)$, can be used for memoization.\\
+Let us call these arrays \texttt{F}, \texttt{G} and \texttt{H}, each of size $n$.\\
+
+\textbf{Step 4 - Acyclicity of Dependencies:}\\
+$f(i)$ calls $g(.)$ with index $\le i-2$ which calls $f(.)$ with index $\le i-2$.\\
+$f(i)$ calls $h(.)$ with index $\le i-1$ which calls $f(.)$ with index $\le i-2$.\\
+$f(i)$ calls $f(.)$ with index $\le i-1$.\\
+Thus, $f(i)$ would never call itself.\\
+$g(i)$ calls $f(.)$ with index $\le i$ which calls $g(.)$ with index $\le i-2$.\\
+$g(i)$ calls $g(.)$ with index $\le i-1$.\\
+Thus, $g(i)$ would never call itself.\\
+$h(i)$ calls $f(.)$ with index $\le i-1$ which calls $h(.)$ with index $\le i-2$.\\
+$h(i)$ calls $h(.)$ with index $\le i-2$.\\
+Thus, $h(i)$ would never call itself.\\
+
+\textbf{Step 5 - Time Complexity Analysis:}\\
+The total number of sub-problems is $\mathcal{O}(n)$ (including both $f(.)$, $g(.)$ and $h(.)$.\\
+The time taken per sub-problem is $\mathcal{O}(1)$ (basic arithmetic operations on integers).\\
+Total time = $\mathcal{O}(n) \times \mathcal{O}(1)$ = $\mathcal{O}(n)$ as required.\\
+
+\textbf{Psuedo Implementation:}\\
+\begin{algorithm}[H]
+    \SetAlgoLined
+    \DontPrintSemicolon
+    
+    \caption{CountWays4xn($n$)}
+
+    \KwInput{$n$, integer}
+    \KwOutput{Number of ways of tiling a $4 \times n$ rectangle using $2 \times 1$ tiles}
+
+    % Set Function Names
+    \SetKwFunction{Ff}{$f$}
+    \SetKwFunction{Fg}{$g$}
+    \SetKwFunction{Fh}{$h$}
+
+    % Write Function with word ``Def''
+    \SetKwProg{Fn}{Def}{:}{}
+    \Fn{\Ff{$i$, \texttt{F}, \texttt{G}, \texttt{H}}}{
+        \If {\texttt{F}$[i]$ is defined}{
+            \KwRet \texttt{F}$[i]$\;
+        }
+        \texttt{F}$[i]$ $\leftarrow$ $f(i-1, \texttt{F}, \texttt{G}, \texttt{H}) + f(i-2, \texttt{F}, \texttt{G}, \texttt{H}) + 2 * g(i-2, \texttt{F}, \texttt{G}, \texttt{H}) + h(i-1, \texttt{F}, \texttt{G}, \texttt{H})$\;
+        \KwRet \texttt{F}$[i]$\;
+    }
+    \;
+    \Fn{\Fg{$i$, \texttt{F}, \texttt{G}, \texttt{H}}}{
+        \If {\texttt{G}$[i]$ is defined}{
+            \KwRet \texttt{G}$[i]$\;
+        }
+        \texttt{G}$[i]$ $\leftarrow$ $g(i-1, \texttt{F}, \texttt{G}, \texttt{H}) + f(i, \texttt{F}, \texttt{G}, \texttt{H})$\;
+        \KwRet \texttt{G}$[i]$\;
+    }
+    \;
+    \Fn{\Fh{$i$, \texttt{F}, \texttt{G}, \texttt{H}}}{
+        \If {\texttt{H}$[i]$ is defined}{
+            \KwRet \texttt{H}$[i]$\;
+        }
+        \texttt{H}$[i]$ $\leftarrow$ $h(i-2, \texttt{F}, \texttt{G}, \texttt{H}) + f(i-1, \texttt{F}, \texttt{G}, \texttt{H})$\;
+        \KwRet \texttt{H}$[i]$\;
+    }
+    \;
+    \texttt{F}, \texttt{G}, \texttt{H} empty array initialized\;
+    \texttt{F}$[0]$ $\leftarrow$ 1\;
+    \texttt{G}$[0]$ $\leftarrow$ 1\;
+    \texttt{H}$[0]$ $\leftarrow$ 0\;
+    \texttt{F}$[1]$ $\leftarrow$ 1\;
+    \texttt{G}$[1]$ $\leftarrow$ 2\;
+    \texttt{H}$[1]$ $\leftarrow$ 1\;
+    \;
+    \KwRet $f(n, \texttt{F}, \texttt{G}, \texttt{H})$\;
+\end{algorithm}
+
+ 
+\newpage 
+\section*{Question 4}
+\label{q4}
+\addcontentsline{toc}{section}{Question 4}
+\setcounter{equation}{0}
+
+\subsection*{Problem:}
+Suppose you are given an undirected tree with arbitrary (positive or negative) weights assigned to the edges. Describe an $O(n)$ time algorithm to find a subtree of the tree having maximum total weight. Modify the algorithm in the case the subtree is required to be a path.
+
+\subsection*{Part A: Subtree}
+\subsubsection*{Subproblems and Recurrences}
+Without loss of generality, we root the tree $T$ at an arbitrary vertex \footnote{Page 121, Algorithms by Jeff Erickson}\\
+Let MWST denote Maximum Weight SubTree\\
+Then we can either include $u$ in the MWST or exclude it.\\
+Let $inc(u)$ denote the MWST if we include $u$\\
+Let $exc(u)$ denote the MWST if we exclude $u$\\
+If we include it, we get the following recurrence 
+$$
+    inc(u) = \sum_{v \in children(u)} \max(inc(v) + weight(u, v), 0)
+$$
+This means that we include a child $v$ of $u$ in the final MWST iff $inc(v) + weight(u, v)$ is positive.\\
+If we exclude it, we get
+$$
+    exc(u) = \max_{v \in children(u)}(\max(inc(v), exc(v)))
+$$
+This means that if we exclude $u$, then we consider all cases of including and excluding it's children and take the one which yields the maximum value.
+
+\subsubsection*{Memoization Strategy}
+For every node, we need to have the values of it's children pre-computed. This naturally suggest a post-order traversal order. While computing the post order traversal, we compute $inc$, $exc$ from the recurrence relations.
+
+\subsubsection*{Acyclicity of Dependencies}
+While computing $inc(u)$ and $exc(u)$, we only use the values for it's children, which occur before $u$ in the post-order traversal. Thus no cyclic dependencies.
+
+\newpage
+\subsubsection*{Algorithm/Pseudocode}
+% T_root = root(T) // T_root roots the tree T at an arbitrary vertex
+% po_array = post_order_traversal(T_root)
+% initilize inc and exc to be 0 for all nodes
+% for u in po_array
+%     for v in children(u)
+%         inc[u] += max(inc[v] + weight(u, v), 0)
+%         exc[u] = max(exc[u], inc[v], exc[v])
+% ans = max(inc[root], exc[root])
+\begin{verbatim}
+T_root = root(T) // T_root roots the tree T at an arbitrary vertex
+initialize memo array to false for all nodes
+MWST(u)
+    u.inc, u.exc = 0
+    for v in children(u)
+        if not memo[v]
+            MWST(v)
+        u.inc += max(v.inc + weight(u, v), 0)
+        u.exc =  max(u.exc, v.inc, v.exc)
+    return
+MWST(root)
+ans = max(root.inc, root.exc)
+\end{verbatim}
+
+\subsubsection*{Time Complexity}
+The algorithm is essentially a post-order traversal of the tree, where each node is processed exactly once. Thus the complexity is $O(n)$ 
+
+\subsection*{Part B: Subtree}
+\subsubsection*{Subproblems and Recurrences}
+Without loss of generality, we root the tree $T$ at an arbitrary vertex\\
+Let MWP denote Maximum Weight Path\\
+Then we can either include $u$ in the MWP or exclude it.\\
+Let $inc(u)$ denote the MWP if we include $u$\\
+Let $exc(u)$ denote the MWP if we exclude $u$\\
+If we include it, we get the following recurrence 
+$$
+\begin{aligned}
+     m_1, m_2 &= maxTopTwo_{v \in children(u)} \max(inc(v) + weight(u, v), 0)\\
+    inc(u) &= m_1 + m_2
+\end{aligned}
+$$
+This means we find the 2 max weight paths that start at $u$ and join them at $u$ iff including them increases the weight of the MWP that includes $u$\\
+If we exclude it, we get
+$$
+    exc(u) = \max_{v \in children(u)}(\max(inc(v), exc(v)))
+$$
+This means that if we exclude $u$, then we consider all cases of including and excluding it's children and take the one which yields the maximum value.
+
+\subsubsection*{Memoization Strategy}
+For every node, we need to have the values of it's children pre-computed. This naturally suggest a post-order traversal order. While computing the post order traversal, we compute $inc$, $exc$ from the recurrence relations.
+
+\subsubsection*{Acyclicity of Dependencies}
+While computing $inc(u)$ and $exc(u)$, we only use the values for it's children, which occur before $u$ in the post-order traversal. Thus no cyclic dependencies.
+
+\subsubsection*{Algorithm/Pseudocode}
+% po_array = post_order_traversal(T_root)
+% initilize inc and exc to be 0 for all nodes
+% for u in po_array
+%     m_1, m_2 = 0
+%     for v in children(u)
+%         temp = inc[v] + weight(u, v)
+%         if temp >= m_1
+%             m_2 = m_1
+%             m_1 = temp
+%         else
+%             if temp > m_2
+%                 m_2 = temp
+%         inc[u] = m_1 + m_2
+%         exc[u] = max(exc[u], inc[v], exc[v])
+% ans = max(inc[root], exc[root])
+\begin{verbatim}
+T_root = root(T) // T_root roots the tree T at an arbitrary vertex
+initialize memo array to false for all nodes
+MWP(u)
+    u.inc, u.exc, m1, m2 = 0
+    for v in children(u)
+        if not memo[v]
+            MWP(v)
+        temp = v.inc + weight(u, v)
+        if temp >= m_1
+            m_2 = m_1
+            m_1 = temp
+        else
+            if temp > m_2
+                m_2 = temp
+        u.exc = max(exc[u], inc[v], exc[v])
+    u.inc = m_1 + m_2
+    return
+MWP(root)
+ans = max(root.inc, root.exc)
+\end{verbatim}
+
+\subsubsection*{Time Complexity}
+The algorithm is essentially a post-order traversal of the tree, where each node is processed exactly once. Thus the complexity is $O(n)$ 
+
+% \begin{verbatim}
+% ans = 0
+% function subtreeMax(root)
+%     sum = 0
+%     u.visited = true
+%     for v in adj[u]
+%         if not v.visited
+%             temp = weight({u,v}) + subtreeMax(v)
+%             if temp > 0
+%                 sum += temp
+%     if sum > ans
+%         ans = sum
+%     return sum
+% subtreeMax(u) // u is an arbitrarily selected root
+% \end{verbatim}
+
+% \subsubsection*{Time Complexity}
+% As each node is visited exactly once and processed in $O(1)$ time, the time complexity will be $O(n)$
+
+% \subsubsection*{Correctness}
+% To-write
+
+% \subsection*{Part B: Path}
+% \subsubsection*{Algorithm}
+% \begin{verbatim}
+% global_max = 0
+% function pathMax(u)
+%     max_1 = 0
+%     max_2 = 0
+%     u.visited = true
+%     for v in adj[u]
+%         if not v.visited
+%             temp = weight({u,v}) + pathMax(v)
+%             if temp >= max_1
+%                 max_2 = max_1
+%                 max_1 = temp
+%             else
+%                 if temp > max_2
+%                     max_2 = temp
+%     global_max = max(global_max, max_1, max_1 + max_2)
+%     return max_1
+% pathMax(u) // u is an arbitrarily selected root
+% \end{verbatim}
+
+% \subsubsection*{Time Complexity}
+% As each node is visited exactly once and processed in $O(1)$ time, the time complexity will be $O(n)$
+
+% \subsubsection*{Correctness}
+% To-write
+
+% \medskip
+% Thus, as the tree is undirected and unrooted, the given tree is just an undirected acyclic connected graph.
+% As the original graph is acyclic, all it's subgraphs will also be acyclic, thus, a maximum weight subtree is equivalent to a maximum weight connected subgraph of the given tree. 
+
+% \medskip
+% Let the given tree be $T = (V, E)$, $n = |V|$.\\
+% Let the arity of the tree be $k$.\\
+% Let $A$ be an array of $n$ doubly linked-lists, one for each node, initially empty, for any node $v$ $A[v]$ can have a size of at most k.\\
+% For a node $v$, $A[0][v]$ denotes the weight of the maximum weighted subtree of $T$ such that $v$ is a leaf in the corresponding subtree. $A[1][v]$ denotes the weight of the maximum weighted subtree of the subgraph induced after removing all nodes from $V$ which were included in tree for $A[0][v]$, and $v$ is a leaf in this subtree. Similarly for all $1 \le i \le deg(v)$.
+
+% \medskip
+% Once we have $A$ populated, we can get the maximum weight subtree of the entire graph.\\
+% For each node $v$, compute $W_v = \sum_{i=0}^{deg(v)-1}A[i][v]$.\\ 
+% The maximum $W_v$ over all nodes $v$ will be the subtree of the maximum total weight.\\
+
+% \subsection*{Algorithm}
+% Let \texttt{deg[v]} store the degree of $v$.\\
+% Let \texttt{Q} be a queue initially filled with all nodes of degree 1 (i.e all leaves)
+% \begin{verbatim}
+
+%     update(A[v], sum)
+%         if A[v] is empty
+%             add sum to it
+%             return
+        
+%         elseif sum < A[v]
+%             return
+        
+%         else
+%             iterate over A[v] and insert sum at the appropriate position
+
+%     while (true)
+%         u = Q.pop(); // Pop the value from the queue
+%         if Q.empty()
+%             break
+%         v = adj[u][0]; // the node connected to u
+%         w = weight({u, v}); // weight of the edge connecting u, v
+        
+%         sum = w;
+%         for i = 0 to length(A[u])
+%             sum += A[u][i];
+        
+%         if sum > 0
+%             update(A[v], sum) // Inserts sum at the appropriate position in A[v]
+        
+%         remove u from V;
+%         remove {u, v} from E;
+        
+%         deg[v]--;
+%         if deg[v] == 1
+%             Q.push(v)
+% \end{verbatim}
+
+% \subsection*{Complexity}
+% The while loop executes at most $n$ times, since each node is added to $Q$ exactly once, and then deleted. 
+
+% \subsection*{Paths}
+% This is a simpler case of the above, for each node $v$, we maintain two values $a$ and $b$ where $a$ is the max weight path (say $P_1$) in $T$ that ends/starts at $v$ and $b$ is max weight path (say $P_2$) in the subgraph of $T$ induced by removing all vertices that occurred in $P_1$. Thus $P_1$ and $P_2$ joined at $v$ denotes the max weight path of $T$ that contains $v$. Once we have $a$ and $b$ computed for all nodes, the max weight path is simply $\max_{v \in V} (v.a + v.b)$.
+
+% \subsection*{Algorithm}
+% Let \texttt{deg[v]} store the degree of $v$.\\
+% Let \texttt{Q} be a queue initially filled with all nodes of degree 1 (i.e all leaves)
+% \begin{verbatim}
+%     while (true)
+%         u = Q.pop(); // Pop the value from the queue
+        
+%         if Q.empty()
+%             break
+            
+%         v = adj[u][0]; // the node connected to u
+%         w = weight({u, v}); // weight of the edge connecting u, v
+        
+%         sum = w + u.a;
+        
+%         if sum >= v.a
+%             v.b = v.a
+%             v.a = sum
+%         else
+%             if sum > v.b
+%                 v.b = sum
+        
+%         remove u from V;
+%         remove {u, v} from E;
+        
+%         deg[v]--;
+%         if deg[v] == 1
+%             Q.push(v)
+% \end{verbatim}
+
+% \subsection*{Complexity}
+% The while loop runs $O(n)$ times since each node is added to the queue exactly once. Each iteration takes $O(1)$ time, thus the total complexity is $O(n)$\\
+
+% % %% Attempt 2
+% % This can be done as a modification of preorder traversal of a directed tree.
+
+% % def subtreemax(node u):
+% %     if u has no children 
+% %         return 0
+% %     sum = 0
+% %     for v in chilren(u)
+% %         if not v.visited
+% %             temp = w(u,v) + subtreemax(v)
+% %             if temp > 0
+% %                 sum += temp
+% %     u.visited = true
+% %     return sum
+
+% % \medskip
+% % The required complexity of $O(n)$ suggests a Dynamic Programming approach.
+
+% % \subsection*{Step 1: Figure out the types of sub-problems}
+
+% % \subsection*{Step 2: Define a recursive procedure}
+
+% % \subsection*{Step 3: Decide on the memoization strategy}
+
+% % \subsection*{Step 4: Check that the sub-problem dependencies are acyclic}
+
+% % \subsection*{Step 5: Analyse the time complexity using recursion}
+
+\newpage 
+\section*{Question 5}
+\label{q5}
+\addcontentsline{toc}{section}{Question 5}
+\setcounter{equation}{0}
+
+\subsection*{(a)}
+
+\textbf{Problem}: Given a sequence of distinct numbers $a_1, a_2, \dots, a_n$ with arbitrary weights $w_1, w_2, \dots, w_n$ assigned
+to them respectively, design an algorithm to find a maximum weight increasing subsequence.
+
+\bigskip
+
+\textbf{Solution}: We use dynamic programming.
+
+\begin{enumerate}
+
+\item \textbf{Types of Sub-Problems}: For all $i$ from 1 to $n$, let $M(i)$ be defined as a maximum weight increasing subsequence that has $a_i$ as its last element. Our goal is to compute $\max_{j\in [n]} M(j)$. Note that the $max$ function here compares subsequences based on total weight; the larger weight subsequence is said to be greater than the smaller weight subsequence.
+
+\item \textbf{Recursive Relation}: The recursive relation among $M(i)$ values can be expressed as follows:
+\begin{align*}
+    M(i) = \max_{j\in [i-1],\ a_j < a_i} M(j) \cdot a_i
+\end{align*}
+where $\cdot$ represents concatenation. This is quite an obvious relation, since if we remove $a_i$ from any maximum weight increasing subsequence $S$ ending at $a_i$, the resultant would have to be a maximum weight increasing subsequence ending at the second last element of $S$. If not, then we could choose a higher weight increasing subsequence ending at the previous element and thus a higher weight increasing subsequence ending at $a_i$, resulting in a clear contradiction.
+
+\medskip
+
+\textbf{Note}: If there is no $j$ with $a_j < a_i$, then the max weight $M(j)$ is assumed to be the empty sequence.
+
+\item \textbf{Memoization Strategy}: A simple array of \texttt{pair(vector,int)} can be used for memoization. Let us call this array \texttt{A}. The elements of this array would be ordered pairs such that \texttt{A[i]} is the ordered pair ($M(i)$, weight($M(i)$)). Initially, none of the $M(i)$ values is known, so the array \texttt{A} is empty. Whenever a recursive call requires us to find $M(i)$ for some $i$, we first check if there is a subsequence already stored in \texttt{A[i]}. If so, we use that directly. Otherwise, we compute this subsequence using the recursive relation defined above, by doing a linear search over all $M(j)$ subsequences for $j$ smaller than $i$, and we finally store the computed subsequence (as a vector) and its weight in \texttt{A[i]}.
+
+\item \textbf{Acyclicity of Dependencies}: Each call to an $M(i)$ uses only the values of $M(j)$ for $j$ smaller than $i$. So, the recursive calls could never lead back to calling $M(i)$ itself, and thus we can be sure that the dependencies are acyclic.
+
+\item \textbf{Time Complexity Analysis}: If the values of $M(j)$ and their weights for all $j$ from 1 to $i-1$ are known, then computing $M(i)$ comprises of iterating over $j$ from 1 to $i-1$, and whenever $a_j < a_i$, updating the maximum weight subsequence encountered so far if it has a larger weight than the current maximum. Assuming that accessing elements in an array takes constant time, this process clearly takes constant time for each $j$, and thus $O(i)$ time for a fixed $i$. Since we must calculate $M(i)$ for all $i$ from 1 to $n$, the total time complexity for computing all $M(i)$'s is:
+\begin{align*}
+    \sum_{i=1}^{n}O(i) = O(n^2)
+\end{align*}
+Once this is done, all we have to do is iterate over $i$ from 1 to $n$ and find the $M(i)$ which has maximum weight. The weights are already stored in the array \texttt{A}, making this easily achievable in $O(n)$ time.
+
+\medskip
+
+So, the overall time complexity of the algorithm is $O(n^2)$.
+
+\end{enumerate}
+
+The pseudocode to compute $M(i)$ for any given $i$ is shown below:
+
+\begin{algorithm}[H]
+    \SetAlgoLined
+    \DontPrintSemicolon
+    \caption{LIS($\{a_j\}_{j=1}^{n},\{w_j\}_{j=1}^{n},i,A$)}
+    \KwInput{distinct numbers $\{a_j\}_{j=1}^{n}$, corresponding weights $\{w_j\}_{j=1}^{n}$, index $i$, memoization array $A$}
+    \KwOutput{largest weight increasing subsequence of $\{a_j\}_{j=1}^{n}$ ending at index $i$, and its weight}
+    \eIf{$A[i]$ is not null} {
+        $(S, w) \leftarrow A[i]$\;
+    }{
+        $S \leftarrow \{a_i\}$\;
+        $w \leftarrow w_i$\;
+        \For{$k = 1$ to $i-1$} {
+            \If{$a_k < a_i$} {
+                $(S', w') \leftarrow $ LIS($\{a_j\}_{j=1}^{n},\{w_j\}_{j=1}^{n},k,A$)\;
+                \If{$w'+w_i>w$} {
+                    $S \leftarrow S'\cdot a_i$\;
+                    $w \leftarrow w'+w_i$\;
+                }
+            }
+        }
+        $A[i] \leftarrow (S, w)$\;
+    }
+    return $(S, w)$\;
+\end{algorithm}
+
+We use the above algorithm to first compute $M(i)$ values for all $i$, and then finding the $M(i)$ having the largest weight simply takes a linear search over the array $A$.
+
+\subsection*{(b)}
+
+\textbf{Problem}: Given a sequence of distinct numbers $a_1, a_2, \dots, a_n$ with arbitrary weights $w_1, w_2, \dots, w_n$ assigned
+to them respectively, design an algorithm to find a maximum weight subsequence such that no three consecutive numbers in the original
+sequence belong to the subsequence.
+
+\bigskip
+
+\textbf{Solution}: Once again, we use dynamic programming.
+
+\begin{enumerate}
+
+\item \textbf{Types of Sub-Problems}: For all $i$ from 1 to $n$, let $N(i)$ denote the maximum weight subsequence of ($a_1, a_2, \dots, a_i$), including no three consecutive elements into the subsequence. Our goal is to compute $N(n)$, that is, the maximum weight subsequence of the entire sequence that does not contain any three consecutive elements from the original sequence $\{a_j\}_{j=1}^{n}$. Also, let $z(i)$ be defined as the weight of $N(i)$.
+
+\item \textbf{Recursive Relation}: For any $i > 3$, we form our recursive relation based on the three elements $a_i$, $a_{i-1}$, and $a_{i-2}$. Clearly, we cannot include all three of them in our subsequence, as they're consecutive elements. We must exclude at least one, which leads us to the following cases:
+\begin{enumerate}
+    \item $a_{i-2}$ is excluded. In this case, $z(i) = z(i-3)+w_{i-1}+w_i$.
+    \item $a_{i-1}$ is excluded. In this case, $z(i) = z(i-2)+w_i$.
+    \item $a_{i}$ is excluded. In this case, $z(i) = z(i-1)$.
+\end{enumerate}
+Since we want the subsequence having maximum weight, we reach the following recursive relation:
+\begin{align*}
+    z(i) = \max\{z(i-1), z(i-2)+w_i, z(i-3)+w_{i-1}+w_i\}
+\end{align*}
+Thus, we have:
+\begin{align*}
+    N(i) = \max\{N(i-1), N(i-2)\cdot a_i, N(i-3)\cdot a_{i-1}\cdot a_i\}
+\end{align*}
+where $\max$ is taken on the basis of weights of the subsequences, and $\cdot$ represents concatenation.
+
+\medskip
+
+The base cases for this recursion are:
+\begin{itemize}
+    \item $N(1) = (a_1)$
+    \item $N(2) = (a_1, a_2)$
+    \item $N(3) = \max\{(a_1, a_2), (a_2, a_3), (a_1, a_3)\}$
+\end{itemize}
+
+\item \textbf{Memoization Strategy}: Just as in part (a), we can use a simple array of \texttt{pair(vector,int)} for memoization. Suppose we call this array \texttt{B}. Then, for all $i$ from 1 to $n$, \texttt{B[i]} is used to store the pair $(N(i), z(i))$. Whenever a recursive call requires the value of $N(i)$ for some $i$, we check if there is a pair already present in \texttt{B[i]}. If there is, then we use $N(i)$ directly from the array. If not, then $N(i)$ is computed recursively, and then stored in the array in a pair, as a vector along with its weight $z(i)$, for use in the future if required.
+
+\item \textbf{Acyclicity of Dependencies}: Any call to $N(i)$ depends only on the values of $N(i-1), N(i-2), N(i-3)$, that is, it depends on $N(j)$ for $j < i$. Thus, a recursive call can never reach back to $N(i)$ itself, as the argument must always decrease. This guarantees acyclicity of dependencies.
+
+\item \textbf{Time Complexity Analysis}: If the values of $N(i-1), N(i-2), N(i-3)$ are known, along with their weights, then computing $N(i)$ consists of comparing the weights of $N(i-1), N(i-2)\cdot a_i,$ and $N(i-3)\cdot a_{i-1}\cdot a_i$. Assuming that accessing array elements is a constant time operation, it is easy to see that computing $N(i)$ from $N(i-1), N(i-2), N(i-3)$ takes constant time, since it essentially requires us to just find the maximum of three numbers. Since the same constant time operation has to be performed for all $i$ from 1 to $n$, the time complexity for calculating all $N(i)$ values is:
+\begin{align*}
+    \sum_{i=1}^{n}O(1) = O(n)
+\end{align*}
+Once we've done this, $N(n)$ gives us the required solution to the problem, and can be accessed in constant time.
+
+\medskip
+
+So, the overall time complexity of the algorithm is $O(n)$.
+
+\end{enumerate}
+
+The pseudocode to compute $N(i)$ for any given $i$ is shown on the next page. To solve the given problem, we simply call $N(n)$.\\
+
+\begin{algorithm}[H]
+    \SetAlgoLined
+    \DontPrintSemicolon
+    \caption{NCS($\{a_j\}_{j=1}^{n},\{w_j\}_{j=1}^{n},i,B$)}
+    \KwInput{distinct numbers $\{a_j\}_{j=1}^{n}$, corresponding weights $\{w_j\}_{j=1}^{n}$, index $i$, memoization array $B$}
+    \KwOutput{largest weight subsequence of $\{a_j\}_{j=1}^{i}$ with no 3 consecutive elements of original seq}
+    \uIf{$B[i]$ is not null} {
+        $(S, w) \leftarrow B[i]$\;
+    }
+    \uElseIf{i = 1} {
+        $S \leftarrow \{a_1\}$\;
+        $w \leftarrow w_1$\;
+        $B[i] \leftarrow (S, w)$\;
+    }
+    \uElseIf{i = 2} {
+        $S \leftarrow \{a_1, a_2\}$\;
+        $w \leftarrow w_1+w_2$\;
+        $B[i] \leftarrow (S, w)$\;
+    }
+    \uElseIf{i = 3} {
+        $k \leftarrow argmax\{w_1+w_2, w_2+w_3, w_1+w_3\}$\;
+        \uIf{k = 1} {
+            $S \leftarrow \{a_1, a_2\}$\;
+            $w \leftarrow w_1+w_2$\;
+        }
+        \uElseIf{k = 2} {
+            $S \leftarrow \{a_2, a_3\}$\;
+            $w \leftarrow w_2+w_3$\;
+        }
+        \uElse {
+            $S \leftarrow \{a_1, a_3\}$\;
+            $w \leftarrow w_1+w_3$\;
+        }
+        \text{\textbf{end}}\;
+        $B[i] \leftarrow (S, w)$\;
+    }
+    \uElse {
+        $(S'_1, w'_1) \leftarrow $ NCS($\{a_j\}_{j=1}^{n},\{w_j\}_{j=1}^{n},i-1,B$)\;
+        $(S'_2, w'_2) \leftarrow $ NCS($\{a_j\}_{j=1}^{n},\{w_j\}_{j=1}^{n},i-2,B$)\;
+        $(S'_3, w'_3) \leftarrow $ NCS($\{a_j\}_{j=1}^{n},\{w_j\}_{j=1}^{n},i-3,B$)\;
+        $k \leftarrow argmax\{w'_1, w'_2+w_i, w'_3+w_{i-1}+w_i\}$\;
+        \uIf{k = 1} {
+            $S \leftarrow S'_1$\;
+            $w \leftarrow w'_1$\;
+        }
+        \uElseIf{k = 2} {
+            $S \leftarrow S'_2\cdot a_i$\;
+            $w \leftarrow w'_2+w_i$\;
+        }
+        \uElse {
+            $S \leftarrow S'_3\cdot a_{i-1}\cdot a_i$\;
+            $w \leftarrow w'_3+w_{i-1}+w_i$\;
+        }
+        \text{\textbf{end}}\;
+        $B[i] \leftarrow (S, w)$\;
+    }
+    \text{\textbf{end}}\;
+    return $(S, w)$\;
+\end{algorithm}
+
+\end{document}
